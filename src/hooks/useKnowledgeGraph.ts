@@ -1,19 +1,21 @@
 
 import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Node as KnowledgeNode, Link } from '@/types';
+import { Node as KnowledgeNode, Link, Comment } from '@/types';
 
 export const useKnowledgeGraph = () => {
   const [nodes, setNodes] = useState<KnowledgeNode[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
 
-  const createGenesisNode = useCallback((content: string) => {
+  const createGenesisNode = useCallback((content: string, title?: string) => {
     const newNode: KnowledgeNode = {
       id: uuidv4(),
       content,
+      title: title || `Genesis ${Date.now()}`,
       type: 'genesis',
       status: 'active',
       createdAt: new Date(),
+      comments: [],
     };
     setNodes(prev => [...prev, newNode]);
     return newNode;
@@ -23,16 +25,19 @@ export const useKnowledgeGraph = () => {
     sourceNodeId: string,
     sourceText: string,
     content: string,
-    type: 'correction' | 'addition'
+    type: 'correction' | 'addition',
+    title?: string
   ) => {
     const newNode: KnowledgeNode = {
       id: uuidv4(),
       content,
+      title: title || `${type} ${Date.now()}`,
       type,
       status: 'active',
       createdAt: new Date(),
       sourceText,
       sourceNodeId,
+      comments: [],
     };
 
     const newLink: Link = {
@@ -55,24 +60,53 @@ export const useKnowledgeGraph = () => {
       return;
     }
 
+    setNodes(prev => prev
+      .map(node => {
+        if (node.id === correctionNode.sourceNodeId) {
+          // Replace the source text with the correction content
+          const updatedContent = node.content.replace(
+            correctionNode.sourceText || '',
+            correctionNode.content
+          );
+          return { ...node, content: updatedContent };
+        }
+        return node;
+      })
+      .filter(node => node.id !== correctionNodeId) // Remove the correction node
+    );
+
+    // Remove the link associated with the correction
+    setLinks(prev => prev.filter(link => link.targetNodeId !== correctionNodeId));
+  }, [nodes]);
+
+  const addComment = useCallback((nodeId: string, content: string) => {
+    const newComment: Comment = {
+      id: uuidv4(),
+      content,
+      createdAt: new Date(),
+      nodeId,
+    };
+
     setNodes(prev => prev.map(node => {
-      if (node.id === correctionNode.sourceNodeId) {
-        // Replace the source text with the correction content
-        const updatedContent = node.content.replace(
-          correctionNode.sourceText || '',
-          correctionNode.content
-        );
-        return { ...node, content: updatedContent };
-      }
-      if (node.id === correctionNodeId) {
-        return { ...node, status: 'merged' as const };
+      if (node.id === nodeId) {
+        return {
+          ...node,
+          comments: [...(node.comments || []), newComment],
+        };
       }
       return node;
     }));
-  }, [nodes]);
+  }, []);
 
   const getNodeById = useCallback((id: string) => {
     return nodes.find(n => n.id === id);
+  }, [nodes]);
+
+  const searchNodes = useCallback((query: string) => {
+    return nodes.filter(node => 
+      node.title?.toLowerCase().includes(query.toLowerCase()) ||
+      node.content.toLowerCase().includes(query.toLowerCase())
+    );
   }, [nodes]);
 
   return {
@@ -81,6 +115,8 @@ export const useKnowledgeGraph = () => {
     createGenesisNode,
     createBranchNode,
     mergeCorrection,
+    addComment,
     getNodeById,
+    searchNodes,
   };
 };

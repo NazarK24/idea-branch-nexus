@@ -1,21 +1,26 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { MarkdownEditor } from './MarkdownEditor';
+import { Node as KnowledgeNode } from '@/types';
 import { X, Save } from 'lucide-react';
 
 interface BranchCreatorProps {
   sourceText: string;
   branchType: 'correction' | 'addition';
+  allNodes: KnowledgeNode[];
   onSubmit: (content: string) => void;
   onCancel: () => void;
+  onNodeSelect: (nodeId: string) => void;
 }
 
 export const BranchCreator: React.FC<BranchCreatorProps> = ({
   sourceText,
   branchType,
+  allNodes,
   onSubmit,
   onCancel,
+  onNodeSelect,
 }) => {
   const [content, setContent] = useState('');
 
@@ -49,17 +54,21 @@ export const BranchCreator: React.FC<BranchCreatorProps> = ({
               : 'Additional information:'
             }
           </label>
-          <Textarea
+          <MarkdownEditor
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={setContent}
+            nodes={allNodes}
+            onNodeSelect={onNodeSelect}
             placeholder={
               branchType === 'correction'
-                ? 'Enter the corrected text...'
-                : 'Add additional details, context, or alternative viewpoint...'
+                ? 'Enter the corrected text using Markdown...'
+                : 'Add additional details, context, or alternative viewpoint using Markdown...'
             }
             className="min-h-[200px]"
-            autoFocus
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Tip: Use [[NodeTitle]] to reference other nodes
+          </p>
         </div>
 
         <div className="flex gap-2">

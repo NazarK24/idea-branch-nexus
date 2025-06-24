@@ -16,49 +16,37 @@ export const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
 
   const getNodeColor = () => {
     switch (node.type) {
-      case 'genesis': return 'bg-purple-100 border-purple-300 text-purple-800';
-      case 'correction': return node.status === 'merged' 
-        ? 'bg-amber-50 border-amber-200 text-amber-700 opacity-75'
-        : 'bg-amber-100 border-amber-300 text-amber-800';
-      case 'addition': return 'bg-blue-100 border-blue-300 text-blue-800';
-      default: return 'bg-gray-100 border-gray-300 text-gray-800';
+      case 'genesis': return 'bg-purple-500 border-purple-600 text-white';
+      case 'correction': return 'bg-amber-500 border-amber-600 text-white';
+      case 'addition': return 'bg-blue-500 border-blue-600 text-white';
+      default: return 'bg-gray-500 border-gray-600 text-white';
     }
   };
 
   const getIcon = () => {
     switch (node.type) {
-      case 'genesis': return <FileText size={16} />;
-      case 'correction': return <GitBranch size={16} />;
-      case 'addition': return <Plus size={16} />;
-      default: return <FileText size={16} />;
+      case 'genesis': return <FileText size={20} />;
+      case 'correction': return <GitBranch size={20} />;
+      case 'addition': return <Plus size={20} />;
+      default: return <FileText size={20} />;
     }
   };
 
   return (
     <div 
-      className={`px-4 py-3 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md min-w-[120px] max-w-[200px] ${getNodeColor()}`}
+      className={`w-20 h-20 rounded-full border-4 cursor-pointer transition-all hover:shadow-lg flex flex-col items-center justify-center ${getNodeColor()}`}
       onClick={onClick}
     >
-      <Handle type="target" position={Position.Left} className="w-2 h-2" />
+      <Handle type="target" position={Position.Left} className="w-3 h-3 bg-white border-2 border-gray-400" />
       
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex flex-col items-center justify-center h-full">
         {getIcon()}
-        <span className="text-xs font-semibold uppercase tracking-wider">
-          {node.type}
+        <span className="text-xs font-bold mt-1 uppercase tracking-wider">
+          {node.type === 'genesis' ? 'G' : node.type === 'correction' ? 'C' : 'A'}
         </span>
-        {node.status === 'merged' && (
-          <span className="text-xs bg-green-200 text-green-800 px-1 rounded">
-            Merged
-          </span>
-        )}
       </div>
       
-      <div className="text-sm line-clamp-3">
-        {node.content.substring(0, 80)}
-        {node.content.length > 80 && '...'}
-      </div>
-      
-      <Handle type="source" position={Position.Right} className="w-2 h-2" />
+      <Handle type="source" position={Position.Right} className="w-3 h-3 bg-white border-2 border-gray-400" />
     </div>
   );
 };

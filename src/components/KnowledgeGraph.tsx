@@ -19,6 +19,7 @@ interface KnowledgeGraphProps {
   nodes: KnowledgeNode[];
   links: Link[];
   onNodeClick: (node: KnowledgeNode) => void;
+  highlightedNodeId?: string;
 }
 
 const nodeTypes = {
@@ -29,14 +30,15 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
   nodes,
   links,
   onNodeClick,
+  highlightedNodeId,
 }) => {
   const flowNodes: FlowNode[] = useMemo(() => {
     return nodes.map((node, index) => ({
       id: node.id,
       type: 'custom',
       position: { 
-        x: Math.cos((index * 2 * Math.PI) / Math.max(nodes.length, 1)) * 200 + 400,
-        y: Math.sin((index * 2 * Math.PI) / Math.max(nodes.length, 1)) * 200 + 300
+        x: Math.cos((index * 2 * Math.PI) / Math.max(nodes.length, 1)) * 250 + 400,
+        y: Math.sin((index * 2 * Math.PI) / Math.max(nodes.length, 1)) * 250 + 300
       },
       data: { 
         node,
@@ -44,33 +46,37 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
       },
       targetPosition: Position.Left,
       sourcePosition: Position.Right,
+      style: highlightedNodeId === node.id ? {
+        boxShadow: '0 0 20px #3b82f6',
+        zIndex: 10,
+      } : {},
     }));
-  }, [nodes, onNodeClick]);
+  }, [nodes, onNodeClick, highlightedNodeId]);
 
   const flowEdges: FlowEdge[] = useMemo(() => {
     return links.map(link => {
-      const sourceNode = nodes.find(n => n.id === link.sourceNodeId);
-      const targetNode = nodes.find(n => n.id === link.targetNodeId);
-      
       return {
         id: link.id,
         source: link.sourceNodeId,
         target: link.targetNodeId,
         type: 'smoothstep',
-        animated: targetNode?.status === 'active',
+        animated: true,
         style: {
           stroke: link.type === 'correction' ? '#f59e0b' : '#3b82f6',
-          strokeWidth: 2,
-          opacity: targetNode?.status === 'merged' ? 0.5 : 1,
+          strokeWidth: 3,
         },
         label: link.type === 'correction' ? 'Correction' : 'Addition',
         labelStyle: {
           fontSize: 12,
-          fontWeight: 500,
+          fontWeight: 600,
+          fill: '#374151',
+          backgroundColor: 'white',
+          padding: '2px 6px',
+          borderRadius: '4px',
         },
       };
     });
-  }, [links, nodes]);
+  }, [links]);
 
   return (
     <div className="w-full h-full">
@@ -81,8 +87,10 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
         fitView
         attributionPosition="bottom-left"
         className="bg-slate-50"
+        minZoom={0.1}
+        maxZoom={2}
       >
-        <Background color="#e2e8f0" size={1} />
+        <Background color="#e2e8f0" size={2} />
         <Controls />
         <MiniMap 
           nodeColor={(node) => {

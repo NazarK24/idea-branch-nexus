@@ -15,15 +15,18 @@ const Index = () => {
     createGenesisNode,
     createBranchNode,
     mergeCorrection,
+    addComment,
     getNodeById,
   } = useKnowledgeGraph();
 
   const [selectedNode, setSelectedNode] = useState<KnowledgeNode | null>(null);
   const [showGenesisCreator, setShowGenesisCreator] = useState(false);
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | undefined>();
 
   const handleNodeClick = (node: KnowledgeNode) => {
     setSelectedNode(node);
     setShowGenesisCreator(false);
+    setHighlightedNodeId(undefined);
   };
 
   const handleCreateGenesis = (content: string) => {
@@ -44,6 +47,14 @@ const Index = () => {
   const handleMergeCorrection = (correctionNodeId: string) => {
     mergeCorrection(correctionNodeId);
     setSelectedNode(null);
+  };
+
+  const handleNodeSelect = (nodeId: string) => {
+    const node = getNodeById(nodeId);
+    if (node) {
+      setHighlightedNodeId(nodeId);
+      setSelectedNode(node);
+    }
   };
 
   const getSourceNode = (node: KnowledgeNode) => {
@@ -113,6 +124,7 @@ const Index = () => {
               nodes={nodes}
               links={links}
               onNodeClick={handleNodeClick}
+              highlightedNodeId={highlightedNodeId}
             />
           )}
         </div>
@@ -130,9 +142,15 @@ const Index = () => {
             <NodeViewer
               node={selectedNode}
               sourceNode={getSourceNode(selectedNode)}
-              onClose={() => setSelectedNode(null)}
+              allNodes={nodes}
+              onClose={() => {
+                setSelectedNode(null);
+                setHighlightedNodeId(undefined);
+              }}
               onCreateBranch={handleCreateBranch}
               onMergeCorrection={handleMergeCorrection}
+              onAddComment={addComment}
+              onNodeSelect={handleNodeSelect}
             />
           ) : null}
         </div>
